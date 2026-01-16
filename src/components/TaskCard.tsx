@@ -50,9 +50,17 @@ export function TaskCard({ item, onMarkDone, onUpdate, onDelete, compact = false
     }
   };
 
+  const parseDueDate = (value: string) => {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      const [year, month, day] = value.split('-').map(Number);
+      return new Date(year, month - 1, day);
+    }
+    return new Date(value);
+  };
+
   const formatDate = (dateStr: string | null | undefined) => {
     if (!dateStr) return null;
-    const date = new Date(dateStr);
+    const date = parseDueDate(dateStr);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const dateOnly = new Date(date);
