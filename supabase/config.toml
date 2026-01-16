@@ -1,1 +1,10 @@
 project_id = "chwujsqgvewfdflkpzmb"
+
+[functions.check-pin]
+verify_jwt = false
+
+[functions.organize-items]
+verify_jwt = false
+
+[functions.airtable-sync]
+verify_jwt = false

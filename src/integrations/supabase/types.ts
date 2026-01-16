@@ -14,7 +14,134 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      content_cache: {
+        Row: {
+          airtable_record_id: string
+          asset: string | null
+          cible: Json | null
+          content_topic: string | null
+          created_time: string | null
+          date: string | null
+          description: string | null
+          distribution_channels: Json | null
+          id: string
+          pilier: Json | null
+          script: string | null
+          status: string | null
+          texte_copy: string | null
+          todo: string | null
+          type: Json | null
+          updated_at: string
+        }
+        Insert: {
+          airtable_record_id: string
+          asset?: string | null
+          cible?: Json | null
+          content_topic?: string | null
+          created_time?: string | null
+          date?: string | null
+          description?: string | null
+          distribution_channels?: Json | null
+          id?: string
+          pilier?: Json | null
+          script?: string | null
+          status?: string | null
+          texte_copy?: string | null
+          todo?: string | null
+          type?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          airtable_record_id?: string
+          asset?: string | null
+          cible?: Json | null
+          content_topic?: string | null
+          created_time?: string | null
+          date?: string | null
+          description?: string | null
+          distribution_channels?: Json | null
+          id?: string
+          pilier?: Json | null
+          script?: string | null
+          status?: string | null
+          texte_copy?: string | null
+          todo?: string | null
+          type?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      dumps: {
+        Row: {
+          created_at: string
+          id: string
+          original_text: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          original_text: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          original_text?: string
+        }
+        Relationships: []
+      }
+      items: {
+        Row: {
+          category: Database["public"]["Enums"]["item_category"]
+          confidence: number | null
+          created_at: string
+          due_date: string | null
+          dump_id: string | null
+          id: string
+          priority: Database["public"]["Enums"]["item_priority"]
+          raw_text: string | null
+          status: Database["public"]["Enums"]["item_status"]
+          title: string
+          type: Database["public"]["Enums"]["item_type"]
+          updated_at: string
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["item_category"]
+          confidence?: number | null
+          created_at?: string
+          due_date?: string | null
+          dump_id?: string | null
+          id?: string
+          priority?: Database["public"]["Enums"]["item_priority"]
+          raw_text?: string | null
+          status?: Database["public"]["Enums"]["item_status"]
+          title: string
+          type?: Database["public"]["Enums"]["item_type"]
+          updated_at?: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["item_category"]
+          confidence?: number | null
+          created_at?: string
+          due_date?: string | null
+          dump_id?: string | null
+          id?: string
+          priority?: Database["public"]["Enums"]["item_priority"]
+          raw_text?: string | null
+          status?: Database["public"]["Enums"]["item_status"]
+          title?: string
+          type?: Database["public"]["Enums"]["item_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "items_dump_id_fkey"
+            columns: ["dump_id"]
+            isOneToOne: false
+            referencedRelation: "dumps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +150,21 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      item_category:
+        | "Site web"
+        | "Publicité"
+        | "Email marketing"
+        | "Création de contenu"
+        | "Réseaux sociaux"
+        | "Lead magnet"
+        | "SEO"
+        | "Branding / Positionnement"
+        | "Analytics / Tracking"
+        | "Partenariats & PR"
+        | "Autre"
+      item_priority: "P0" | "P1" | "P2" | "P3"
+      item_status: "Next" | "Backlog" | "Doing" | "Done"
+      item_type: "Task" | "Reminder" | "Question" | "Note" | "Waiting"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +291,23 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      item_category: [
+        "Site web",
+        "Publicité",
+        "Email marketing",
+        "Création de contenu",
+        "Réseaux sociaux",
+        "Lead magnet",
+        "SEO",
+        "Branding / Positionnement",
+        "Analytics / Tracking",
+        "Partenariats & PR",
+        "Autre",
+      ],
+      item_priority: ["P0", "P1", "P2", "P3"],
+      item_status: ["Next", "Backlog", "Doing", "Done"],
+      item_type: ["Task", "Reminder", "Question", "Note", "Waiting"],
+    },
   },
 } as const

@@ -57,6 +57,22 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        priority: {
+          p0: "hsl(var(--priority-p0))",
+          p1: "hsl(var(--priority-p1))",
+          p2: "hsl(var(--priority-p2))",
+          p3: "hsl(var(--priority-p3))",
+        },
+        status: {
+          next: "hsl(var(--status-next))",
+          doing: "hsl(var(--status-doing))",
+          backlog: "hsl(var(--status-backlog))",
+          done: "hsl(var(--status-done))",
+        },
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
       },
       borderRadius: {
         lg: "var(--radius)",
