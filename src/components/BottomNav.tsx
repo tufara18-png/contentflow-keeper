@@ -3,7 +3,8 @@ import { PenLine, Target, List, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
-  { path: '/', icon: PenLine, label: 'Capture' },
+  { path: '/', icon: List, label: 'Dashboard' },
+  { path: '/capture', icon: PenLine, label: 'Capture' },
   { path: '/focus', icon: Target, label: 'Focus' },
   { path: '/tasks', icon: List, label: 'All Tasks' },
   { path: '/calendar', icon: Calendar, label: 'Calendrier' },

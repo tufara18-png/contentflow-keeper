@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { PinGate } from "@/components/PinGate";
 import { BottomNav } from "@/components/BottomNav";
 import CapturePage from "./pages/CapturePage";
+import DashboardPage from "./pages/DashboardPage";
 import FocusPage from "./pages/FocusPage";
 import AllTasksPage from "./pages/AllTasksPage";
 import CalendarPage from "./pages/CalendarPage";
@@ -22,7 +23,8 @@ const App = () => (
         <BrowserRouter>
           <div className="min-h-screen bg-background">
             <Routes>
-              <Route path="/" element={<CapturePage />} />
+              <Route path="/" element={<DashboardPage />} />
+              <Route path="/capture" element={<CapturePage />} />
               <Route path="/focus" element={<FocusPage />} />
               <Route path="/tasks" element={<AllTasksPage />} />
               <Route path="/calendar" element={<CalendarPage />} />
