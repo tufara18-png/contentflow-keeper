@@ -33,12 +33,11 @@ const addDays = (date: Date, days: number) => {
   return next;
 };
 
-const getNextWeekday = (date: Date, weekday: number, forceNextWeek = false) => {
+const getNextWeekday = (date: Date, weekday: number) => {
   const current = startOfDay(date);
   const currentDay = current.getDay();
   let diff = (weekday - currentDay + 7) % 7;
   if (diff === 0) diff = 7;
-  if (forceNextWeek && diff > 0) diff += 7;
   return addDays(current, diff);
 };
 
@@ -71,9 +70,8 @@ export function parseTaskInput(text: string, now = new Date()): ParsedTaskInput 
       getDate: () => addDays(now, 7)
     },
     {
-      regex: /\b(?:pour\s+|ce\s+)?(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)(?:\s+(prochain|suivant)(?:e)?)?\b/i,
-      getDate: (match) =>
-        getNextWeekday(now, WEEKDAYS[match[1].toLowerCase()], Boolean(match[2]))
+      regex: /\b(?:pour\s+|ce\s+)?(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)\b/i,
+      getDate: (match) => getNextWeekday(now, WEEKDAYS[match[1].toLowerCase()])
     }
   ];
 
