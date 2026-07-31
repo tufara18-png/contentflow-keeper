@@ -28,6 +28,29 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Hydrate job from media library
+        shell: python
+        run: |
+          import json
+          import shutil
+          from pathlib import Path
+
+          root = Path.cwd()
+          job_id = "${{ inputs.job_id }}"
+          job_dir = root / "contentready-jobs" / job_id
+          config = json.loads((job_dir / "job.json").read_text(encoding="utf-8"))
+
+          audio_path = root / config["audio_path"]
+          if not audio_path.is_file():
+              raise FileNotFoundError(audio_path)
+          shutil.copy2(audio_path, job_dir / f"audio{audio_path.suffix.lower()}")
+
+          for index, value in enumerate(config.get("video_paths", [])):
+              source = root / value
+              if not source.is_file():
+                  raise FileNotFoundError(source)
+              shutil.copy2(source, job_dir / f"clip-{index:03d}-{source.name}")
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
