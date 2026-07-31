@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ContentReady — GitHub Actions</title>
+<style>
+:root{color-scheme:dark;--bg:#0c0c0e;--panel:#17171b;--line:#303039;--text:#f5f5f7;--muted:#9b9ba5;--accent:#b7ff38;--danger:#ff6767}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 Inter,system-ui,sans-serif}.wrap{max-width:1020px;margin:auto;padding:28px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}.wide{grid-column:1/-1}h1{font-size:26px;margin:0 0 5px}h2{font-size:16px;margin:0 0 14px}.muted{color:var(--muted)}label{display:block;margin:12px 0 5px;font-weight:650}input,button,textarea{width:100%;border:1px solid var(--line);border-radius:9px;background:#101013;color:var(--text);padding:11px;font:inherit}input[type=range]{padding:0}button{cursor:pointer;background:var(--accent);color:#0b0b0b;border:0;font-weight:800;margin-top:12px}button.secondary{background:#28282f;color:var(--text);border:1px solid var(--line)}button:disabled{opacity:.45;cursor:not-allowed}.row{display:flex;gap:10px}.row>*{flex:1}canvas{width:100%;height:150px;background:#101013;border:1px solid var(--line);border-radius:10px;display:block}.time{font:700 24px ui-monospace,monospace}.status{white-space:pre-wrap;background:#101013;border:1px solid var(--line);border-radius:9px;padding:12px;min-height:110px}.ok{color:var(--accent)}.bad{color:var(--danger)}small{display:block;color:var(--muted);margin-top:5px}a{color:var(--accent)}@media(max-width:760px){.grid{grid-template-columns:1fr}.wide{grid-column:auto}.wrap{padding:14px}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+</head>
+<body><div class="wrap">
+<h1>ContentReady BRAT</h1><div class="muted">Traitement gratuit par GitHub Actions : Demucs + Whisper + FFmpeg.</div>
+<div class="grid" style="margin-top:20px">
+<section class="panel">
+<h2>1. Accès GitHub</h2>
+<label>Repository</label><input id="repo" value="tufara18-png/contentflow-keeper">
+<label>Token GitHub</label><input id="token" type="password" placeholder="github_pat_…">
+<small>Token fine-grained : accès à ce repo, Contents lecture/écriture et Actions lecture/écriture. Le token reste uniquement dans cet onglet.</small>
+</section>
+<section class="panel">
+<h2>2. Médias</h2>
+<label>Morceau audio</label><input id="audioFile" type="file" accept="audio/*">
+<label>Clips vidéo</label><input id="clipFiles" type="file" accept="video/*" multiple>
+<small>Sans clips, le job produit seulement la transcription et l’extrait WAV. Garde chaque fichier sous environ 80 Mo.</small>
+</section>
+<section class="panel wide">
+<h2>3. Choisir exactement les 15 secondes</h2>
+<canvas id="wave" width="960" height="150"></canvas>
+<div class="row" style="align-items:center;margin-top:12px"><div><input id="start" type="range" min="0" max="0" step="0.05" value="0"></div><div class="time"><span id="startLabel">0.00</span> → <span id="endLabel">15.00</span></div></div>
+<div class="row"><button id="play" class="secondary" disabled>▶ Écouter l’extrait</button><button id="stop" class="secondary" disabled>■ Arrêter</button></div>
+</section>
+<section class="panel">
+<h2>4. Options</h2>
+<div class="row"><div><label>Seed</label><input id="seed" type="number" value="1" min="1"></div><div><label>Grain</label><input id="grain" type="number" value="8" min="0" max="25"></div></div>
+<button id="launch" disabled>Envoyer et lancer</button>
+</section>
+<section class="panel">
+<h2>État</h2><div id="status" class="status">Charge un morceau audio.</div>
+<button id="download" class="secondary" disabled>Télécharger le résultat ZIP</button>
+</section>
+</div></div>
+<script>
+const $=id=>document.getElementById(id);const api='https://api.github.com';let audioFile,audioUrl,audioEl,decoded,jobId,artifactBlob;
+function log(text,cls=''){const el=$('status');el.className='status '+cls;el.textContent=text}
+function authHeaders(extra={}){const token=$('token').value.trim();if(!token)throw new Error('Ajoute ton token GitHub.');return {'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28',...extra}}
+async function gh(path,opts={}){const r=await fetch(api+path,{...opts,headers:authHeaders(opts.headers||{})});if(!r.ok){let msg=await r.text();throw new Error(`GitHub ${r.status}: ${msg.slice(0,500)}`)}return r.status===204?null:r.json()}
+function ext(name){const m=name.match(/(\.[a-z0-9]+)$/i);return m?m[1].toLowerCase():''}
+function safeName(name){return name.replace(/[^a-z0-9._-]/gi,'_')}
+function bytesToBase64(buffer){const bytes=new Uint8Array(buffer);let out='';const chunk=0x8000;for(let i=0;i<bytes.length;i+=chunk)out+=String.fromCharCode(...bytes.subarray(i,i+chunk));return btoa(out)}
+async function upload(path,fileOrText,message){let content;if(typeof fileOrText==='string')content=btoa(unescape(encodeURIComponent(fileOrText)));else content=bytesToBase64(await fileOrText.arrayBuffer());const repo=$('repo').value.trim();return gh(`/repos/${repo}/contents/${encodeURI(path)}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,content,branch:'main'})})}
+function drawWave(){const c=$('wave'),x=c.getContext('2d');x.clearRect(0,0,c.width,c.height);x.fillStyle='#101013';x.fillRect(0,0,c.width,c.height);if(!decoded)return;const data=decoded.getChannelData(0),step=Math.max(1,Math.floor(data.length/c.width));x.strokeStyle='#777781';x.beginPath();for(let px=0;px<c.width;px++){let min=1,max=-1;for(let j=0;j<step;j++){const v=data[px*step+j]||0;if(v<min)min=v;if(v>max)max=v}x.moveTo(px,(1+min)*c.height/2);x.lineTo(px,(1+max)*c.height/2)}x.stroke();const duration=decoded.duration,start=+$('start').value,end=Math.min(duration,start+15),sx=start/duration*c.width,ex=end/duration*c.width;x.fillStyle='rgba(183,255,56,.22)';x.fillRect(sx,0,Math.max(2,ex-sx),c.height);x.strokeStyle='#b7ff38';x.lineWidth=2;x.strokeRect(sx+1,1,Math.max(1,ex-sx-2),c.height-2)}
+function updateRange(){const s=+$('start').value;$('startLabel').textContent=s.toFixed(2);$('endLabel').textContent=(s+15).toFixed(2);drawWave()}
+$('audioFile').addEventListener('change',async e=>{audioFile=e.target.files[0];if(!audioFile)return;log('Analyse locale de la waveform…');if(audioUrl)URL.revokeObjectURL(audioUrl);audioUrl=URL.createObjectURL(audioFile);audioEl=new Audio(audioUrl);const ab=await audioFile.arrayBuffer();const ac=new AudioContext();decoded=await ac.decodeAudioData(ab.slice(0));await ac.close();$('start').max=Math.max(0,decoded.duration-15).toFixed(2);$('start').value='0';$('play').disabled=false;$('stop').disabled=false;$('launch').disabled=false;updateRange();log(`Audio chargé : ${audioFile.name}\nDurée : ${decoded.duration.toFixed(2)} s`,'ok')});
+$('start').addEventListener('input',updateRange);$('play').onclick=()=>{if(!audioEl)return;audioEl.currentTime=+$('start').value;audioEl.play();const end=+$('start').value+15;const timer=setInterval(()=>{if(audioEl.paused||audioEl.currentTime>=end){audioEl.pause();clearInterval(timer)}},50)};$('stop').onclick=()=>audioEl&&audioEl.pause();
+async function waitForRun(repo,id,started){for(let i=0;i<120;i++){const data=await gh(`/repos/${repo}/actions/workflows/contentready-job.yml/runs?event=workflow_dispatch&branch=main&per_page=20`);const run=data.workflow_runs.find(r=>r.display_title===`ContentReady ${id}`&&new Date(r.created_at)>=new Date(started-10000));if(run)return run;log(`Job ${id}\nEn attente du démarrage GitHub Actions… (${i+1})`);await new Promise(r=>setTimeout(r,5000))}throw new Error('Le workflow ne démarre pas.')}
+async function waitForCompletion(repo,run){for(let i=0;i<180;i++){const current=await gh(`/repos/${repo}/actions/runs/${run.id}`);log(`Job ${jobId}\nÉtat : ${current.status}\nConclusion : ${current.conclusion||'—'}\nRun #${current.run_number}`);if(current.status==='completed'){if(current.conclusion!=='success')throw new Error(`Le workflow a terminé avec : ${current.conclusion}`);return current}await new Promise(r=>setTimeout(r,10000))}throw new Error('Temps d’attente dépassé.')}
+async function fetchArtifact(repo,runId){const data=await gh(`/repos/${repo}/actions/runs/${runId}/artifacts`);const art=data.artifacts.find(a=>a.name===`contentready-${jobId}`);if(!art)throw new Error('Artifact introuvable.');const r=await fetch(`${api}/repos/${repo}/actions/artifacts/${art.id}/zip`,{headers:authHeaders()});if(!r.ok)throw new Error('Téléchargement de l’artifact impossible.');return r.blob()}
+$('launch').onclick=async()=>{try{$('launch').disabled=true;$('download').disabled=true;artifactBlob=null;const repo=$('repo').value.trim();if(!audioFile)throw new Error('Choisis un fichier audio.');jobId=`job-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;const base=`contentready-jobs/${jobId}`;const clips=[...$('clipFiles').files];const config={start:+$('start').value,seed:+$('seed').value||1,grain:+$('grain').value||8,created_at:new Date().toISOString()};log(`Job ${jobId}\nEnvoi de la configuration…`);await upload(`${base}/job.json`,JSON.stringify(config,null,2),`Add ${jobId} configuration`);log(`Job ${jobId}\nEnvoi de l’audio…`);await upload(`${base}/audio${ext(audioFile.name)||'.wav'}`,audioFile,`Add ${jobId} audio`);for(let i=0;i<clips.length;i++){log(`Job ${jobId}\nEnvoi du clip ${i+1}/${clips.length}…`);await upload(`${base}/clip-${String(i).padStart(2,'0')}-${safeName(clips[i].name)}`,clips[i],`Add ${jobId} clip ${i+1}`)}const started=Date.now();await gh(`/repos/${repo}/actions/workflows/contentready-job.yml/dispatches`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ref:'main',inputs:{job_id:jobId}})});const run=await waitForRun(repo,jobId,started);await waitForCompletion(repo,run);artifactBlob=await fetchArtifact(repo,run.id);$('download').disabled=false;log(`Terminé.\nJob : ${jobId}\nLe ZIP contient analysis.json, snippet.wav et le MP4 quand des clips ont été fournis.`,'ok')}catch(err){console.error(err);log(err.message,'bad')}finally{$('launch').disabled=false}};
+$('download').onclick=()=>{if(!artifactBlob)return;const a=document.createElement('a');a.href=URL.createObjectURL(artifactBlob);a.download=`contentready-${jobId}.zip`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),5000)};
+</script></body></html>
