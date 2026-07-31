@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ContentReady BRAT Render</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <main>
+    <h1>BRAT video — 15 secondes</h1>
+    <section class="panel">
+      <label>1. Morceau</label>
+      <input id="audioFile" type="file" accept="audio/*" />
+      <audio id="audio" controls></audio>
+      <canvas id="wave" width="1200" height="180"></canvas>
+      <div class="row">
+        <button id="playSelection">Lire les 15 secondes</button>
+        <span>Début : <strong id="startLabel">0.00</strong> s</span>
+      </div>
+      <input id="startRange" type="range" min="0" max="0" step="0.05" value="0" />
+    </section>
+
+    <section class="panel">
+      <div class="row between">
+        <h2>2. Paroles synchronisées</h2>
+        <button id="analyze">Séparer la voix + synchroniser</button>
+      </div>
+      <div id="status"></div>
+      <div class="tableWrap">
+        <table>
+          <thead><tr><th>Mot</th><th>Début</th><th>Fin</th><th>Ligne</th><th></th></tr></thead>
+          <tbody id="wordsBody"></tbody>
+        </table>
+      </div>
+      <button id="addWord">Ajouter un mot</button>
+    </section>
+
+    <section class="panel">
+      <h2>3. Vidéos</h2>
+      <input id="clips" type="file" accept="video/*" multiple />
+      <div class="row">
+        <label>Seed <input id="seed" type="number" value="1" min="0" /></label>
+        <label>Grain <input id="grain" type="range" value="8" min="0" max="25" /></label>
+      </div>
+      <button id="render">Générer la vidéo 15 s</button>
+      <a id="download" hidden>Télécharger la vidéo</a>
+    </section>
+  </main>
+  <script src="/static/app.js"></script>
+</body>
+</html>
