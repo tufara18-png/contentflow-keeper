@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - contentready-actions/client.html
+      - index.html
       - .github/workflows/pages.yml
   workflow_dispatch:
 
@@ -29,14 +30,13 @@ jobs:
 
       - name: Prepare site
         run: |
+          rm -rf _site
           mkdir -p _site
           cp contentready-actions/client.html _site/index.html
           touch _site/.nojekyll
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       - name: Upload site
         uses: actions/upload-pages-artifact@v3
